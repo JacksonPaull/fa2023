@@ -1,0 +1,5 @@
+Neural Style Transfer
+ - Train a model to transfer 'style' of one image to another
+typically uses a pretrained CNN on imagenet-VGG
+
+https://www.v7labs.com/blog/neural-style-transfer
