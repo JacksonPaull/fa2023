@@ -1,0 +1,10 @@
+Professor Bovik,
+
+My proposal for a course project will be an exploration and implementation of neural style transfer, with a goal of achieving results not dissimilar to those in Gatys et all (https://arxiv.org/abs/1508.06576v1).
+Ultimately I want to create an architecture which can have a multitude of styles applied to a multitude of images, creating a grid of results.
+
+Let me know what you think,
+Jackson Paull
+jhp2539
+
+P.S. I do not have a project partner currently; are they necessary?
