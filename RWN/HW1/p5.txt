@@ -1,0 +1,37 @@
+# Create scale free network
+def create_sf(N, M):
+    G = nx.Graph()
+    for u in range(N):
+        G.add_node(u)
+        for _ in range(M):
+            # Select from the other nodes in the network that are not currently connected to i
+            sel = [n for n in G if n not in G[u] and n != u]
+            if len(sel) == 0:
+                break # Connected to all nodes in the network
+
+            p = np.asarray(G.degree)[:,1][sel]
+            if p.sum() == 0:
+                # First edge in the network, set the probabilities to 1 to kickstart Pref Attachment
+                p[0] = 1
+            else:
+                p = p/p.sum() # Normalize
+            
+            v = np.random.choice(sel, p=p)
+
+            G.add_edge(u, v)
+    return G
+
+
+# Create erdos-reyni network
+def create_er(N, total_edges, p=0.05):
+    G = nx.Graph()
+    G.add_nodes_from(np.arange(N))
+    while len(G.edges) < total_edges:
+        # Create a new edge between two randomly selected not connected nodes
+        u, v = np.random.choice(G.nodes, 2)
+        if u == v:
+            continue
+        if (u, v) not in G.edges and np.random.random() < p:
+            G.add_edge(u, v)
+
+    return G
