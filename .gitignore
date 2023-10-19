@@ -2,3 +2,4 @@
 *.jpg
 *.gexf
 *.gml
+**/gnn_project/**
