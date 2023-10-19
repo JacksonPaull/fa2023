@@ -37,6 +37,23 @@ org_features = {
 
 }
 
+def augment_student(graph, students: dict or list, student_features=student_features):
+    for feature in student_features.keys():
+        feature_dict = student_features[feature]
+        values = {}
+        if type(students) == dict:
+            students = list(students.keys())
+
+        for s in students:
+            p = None
+            if feature_dict.get('p', None) is not None:
+                p = feature_dict['p'] / feature_dict['p'].sum()
+            values[s] = feature_dict['dtype'](np.random.choice(feature_dict['values'], p=p))
+
+        nx.set_node_attributes(graph, values, feature)
+
+def augment_org(graph, orgs: dict or list, org_features=org_features):
+    augment_student(graph, orgs, student_features=org_features)
 
 def synthesize_student(__studentname__=[1], student_features=student_features):
     student = {}
