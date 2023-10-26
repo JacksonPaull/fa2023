@@ -3,3 +3,4 @@
 *.gexf
 *.gml
 **/gnn_project/**
+**/__pycache__/
