@@ -2,5 +2,7 @@
 *.jpg
 *.gexf
 *.gml
+*.csv
+*.DS_STORE
 **/gnn_project/**
 **/__pycache__/
