@@ -18,6 +18,7 @@ import sys
 import operator
 import time
 import random
+from copy import deepcopy
 
 #########################################
 #         Simulation Parameters
@@ -54,66 +55,117 @@ def build_networks(days, N):
 #      Initialize the Population 
 ###########################################
 
-def init_population(mode,N, m, networks):
-    
-    #TODO: initialize a population of N nodes 
+def init_population(mode, N, m, networks):
+    for n in networks:
+        nx.set_node_attributes(n, 'S', 'status')
+        nx.set_node_attributes(n, -1, 'recovery_date')
+
 
     #depending on which mode, choose m patient 0's 
-    if mode == 'top_degree':
+    n = networks[0]
+    degrees = np.array(n.degree)
+    if mode == 'degree':
         # choose 5 nodes with the highest degree from networks[0]
-    else if mode == 'random':
+        order = degrees[:,1].argsort()[::-1]
+        choices = degrees[order][:m,0]
+        
+    elif mode == 'random':
         #choose 5 nodes at random 
+        order = np.random.permutation(np.arange(n.number_of_nodes()))
+        choices = degrees[order][:m,0]
 
-    return 
+    else:
+        raise ValueError(f'Unsupported mode \'{mode}\' specified')
+        
+    # Set status for initial population
+    d = {n:'I' for n in choices}
+    nx.set_node_attributes(n, d, 'status')
+
+    # Set Recovery date for initial population
+    d = {n:DELTA_RECOVER for n in choices}
+    nx.set_node_attributes(n, d, 'recovery_date')
+    return networks
+
+def mitigate(networks):
+    # TODO Apply a mitigation strat
+    pass
 
 ###########################################
 #              SIR Simulation  
 ###########################################
  
 def run_experiment(days,networks):
-    
+    networks = deepcopy(networks)
     for day in range(days):
         G = networks[day]
-        
+
         #susceptible to infected
+        infected = [x for x, d in G.nodes(data=True) if d['status'] == 'I']
+        susceptible = [x for x, d in G.nodes(data=True) if d['status'] == 'S']
         
         #for person in infected:
+        for i in infected:
             #get neighbors
-            neighbors = list(G.neighbors(person))
-            #for each neighbor: 
-                #apply chance of infection
-                #if chance <= p_transmit_virus:
-                    #this node is now infected 
-                    #set recovery time to day + DELTA_RECOVER
-            
+            neighbors = list(G.neighbors(i))
+
+            # Apply chance for infection
+            d = {'status': {}, 'recovery':{}}
+            for n in neighbors:
+                # only consider susceptible neighbors
+                if n not in susceptible:
+                    continue
+
+                if np.random.random() <= p_transmit_virus:
+                    d['status'][n] = 'I'
+                    d['recovery'][n] = day + DELTA_RECOVER
+
+            nx.set_node_attributes(G, d['status'], 'status')
+            nx.set_node_attributes(G, d['recovery'], 'recovery_date')
+
 
         #infected to recovered 
         #Transition infected people to recovered after DELTA_RECOVER days.
+        to_recover = {x:'R' for x, d in G.nodes(data=True) if d['recovery_date'] == day}
+        nx.set_node_attributes(G, to_recover, 'status')
 
-    return 
+        # Tomorrow starts where today ends (except for the last day in the simulation... for which there is no tomorrow)
+        if day < days-1:
+            networks[day + 1] = G.copy()
+
+    return networks
 
 ###########################################
 #              Plot Results  
 ###########################################
 
-def plot_SIR():
+def networks_to_num_infections(networks):
+    infections = []
+    for N in networks:
+        infected = [n for n, d in N.nodes(data=True) if d['status']=='I']
+        infections.append(len(infected))
+
+    return infections
+
+def plot_SIR(partA, partB, partC1, partC2, figname='./experiment_results.png', show=True, save=True):
     plt.figure()
 
-    #plot infection vs day from part A 
-
-    #plot infection vs day from part B
-
-    #plot infection vs day from part C mitigation on 'degree' initialization
-
-    #plot infections vs day from part C mitigation on 'random' initialization
+    # Plots
+    plt.plot(partA, label='Top M, no mitigation (Part A)')
+    plt.plot(partB, label='Random, no mitigation (Part B)')
+    plt.plot(partC1, label='Top M, mitigated (Part C)')
+    plt.plot(partC2, label='Random, mitigated (Part C)')
 
     #label your plot lines 
     plt.legend()
     plt.grid()
     plt.title("Number of Infections vs Day")
-    plt.xaxis("Day")
-    plt.yaxis("Number of infections")
-    plt.show()
+    plt.xlabel("Day")
+    plt.ylabel("Number of infections")
+
+    if show:
+        plt.show()
+    if save:
+        plt.savefig(figname)
     #or plt.savefig(fname) to save your figure to a file 
 
     #screenshot this figure and place in your HW2 PDF. 
@@ -129,26 +181,31 @@ def main():
 
     networks = build_networks(days,N)
     
-    #initialize population for top 5 degrees 
+    #initialize population for top 5 degrees, running part A
     init_population("degree", N, m, networks)
-
-    #run SIR experiment A
-    run_experiment( days,networks)
+    partA = run_experiment( days,networks)
+    pA = networks_to_num_infections(partA)
    
-    #initialize population for random 5 nodes 
+    #initialize population for random 5 nodes, running part B
     init_population("random", N, m, networks)
-
-    #run SIR experiment B
-    run_experiment(days,networks)
-   
+    partB = run_experiment(days,networks)
+    pB = networks_to_num_infections(partB)
 
     #implement your own mitigation strategy (part C)
     #Note: use your mititgation strategy on top "degree" initialization
     # and"random" initialization to compare. 
+    init_population('degree', N, m, networks)
+    # Mitigate
+
+    partC1 = run_experiment(days, networks)
+
+    init_population('random', N, m, networks)
+    # Mitigate
+
+    partC2 = run_experiment(days, networks)
 
     #plot all infections vs time 
-    plot_SIR()
-
+    plot_SIR(pA, pB, partC1, partC2)
 
 
 
