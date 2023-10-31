@@ -1,4 +1,5 @@
 https://arxiv.org/abs/1508.06576v1
+https://arxiv.org/pdf/1508.06576.pdf
 https://arxiv.org/pdf/1508.06576v2.pdf
 https://pytorch.org/tutorials/advanced/neural_style_tutorial.html
 https://towardsdatascience.com/neural-style-transfer-tutorial-part-1-f5cd3315fa7f
