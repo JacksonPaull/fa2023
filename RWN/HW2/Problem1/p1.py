@@ -86,9 +86,24 @@ def init_population(mode, N, m, networks):
     nx.set_node_attributes(n, d, 'recovery_date')
     return networks
 
-def mitigate(networks):
-    # TODO Apply a mitigation strat
-    pass
+def mitigate(networks, e=0.25, nn=10):
+    # Apply a probability of being an 'essential person' ~25% of the population
+    G = networks[0]
+
+    essential = dict(zip(np.arange(1000), np.random.random(1000) < e))
+    nx.set_node_attributes(G, essential, 'essential')
+
+    # Non-essential people limit their interactions to 10 randomly chosen people. 
+    # In practice, some of these chosen friends will also cut node out of their network
+    # Some sects of the population will even disconnect 
+    non_essential = [x for x, d in G.nodes(data=True) if not d['essential']]
+
+    for node in non_essential:
+        neighbors = np.array([n for n in G[node]])
+        remove_neighbors = neighbors[np.argsort(np.random.random(len(neighbors)))][nn:]
+        G.remove_edges_from([(node, n) for n in remove_neighbors])
+
+    return networks
 
 ###########################################
 #              SIR Simulation  
@@ -146,30 +161,26 @@ def networks_to_num_infections(networks):
 
     return infections
 
-def plot_SIR(partA, partB, partC1, partC2, figname='./experiment_results.png', show=True, save=True):
-    plt.figure()
+def plot_SIR(partA, partB, partC1, partC2, figname='./experiment_results', show=True, save=True):
+    fig, ax = plt.subplots()
 
     # Plots
-    plt.plot(partA, label='Top M, no mitigation (Part A)')
-    plt.plot(partB, label='Random, no mitigation (Part B)')
-    plt.plot(partC1, label='Top M, mitigated (Part C)')
-    plt.plot(partC2, label='Random, mitigated (Part C)')
+    ax.plot(partA, label='Top M, no mitigation (Part A)')
+    ax.plot(partB, label='Random, no mitigation (Part B)')
+    ax.plot(partC1, label='Top M, mitigated (Part C)')
+    ax.plot(partC2, label='Random, mitigated (Part C)')
 
     #label your plot lines 
-    plt.legend()
-    plt.grid()
-    plt.title("Number of Infections vs Day")
-    plt.xlabel("Day")
-    plt.ylabel("Number of infections")
+    ax.legend()
+    ax.grid()
+    ax.set_title("Number of Infections vs Day")
+    ax.set_xlabel("Day")
+    ax.set_ylabel("Number of infections")
 
     if show:
         plt.show()
     if save:
-        plt.savefig(figname)
-    #or plt.savefig(fname) to save your figure to a file 
-
-    #screenshot this figure and place in your HW2 PDF. 
-    return 
+        fig.savefig(figname)
 
 
 def main():
@@ -195,17 +206,17 @@ def main():
     #Note: use your mititgation strategy on top "degree" initialization
     # and"random" initialization to compare. 
     init_population('degree', N, m, networks)
-    # Mitigate
-
+    mitigate(networks) # Mitigate
     partC1 = run_experiment(days, networks)
+    c1 = networks_to_num_infections(partC1)
 
     init_population('random', N, m, networks)
-    # Mitigate
-
+    mitigate(networks) # Mitigate
     partC2 = run_experiment(days, networks)
+    c2 = networks_to_num_infections(partC2)
 
     #plot all infections vs time 
-    plot_SIR(pA, pB, partC1, partC2)
+    plot_SIR(pA, pB, c1, c2)
 
 
 
