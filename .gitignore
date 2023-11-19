@@ -6,3 +6,4 @@
 *.DS_STORE
 **/gnn_project/**
 **/__pycache__/
+*.mp4
