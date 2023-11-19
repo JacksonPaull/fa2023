@@ -25452,7 +25452,7 @@ zhejiang university
 U28217
 2
 university of illinois at urbana-champaign
-universidad del bã­o bã­o
+universidad del bï¿½o bï¿½o
 U7311
 1
 bradley university
@@ -25650,7 +25650,7 @@ U26617
 jilin university
 U15095
 1
-truã²ng dai hoc bã¡ch khoa hã nã´i
+truï¿½ng dai hoc bï¿½ch khoa hï¿½nï¿½i
 U21681
 1
 cornell university
@@ -30793,7 +30793,7 @@ U444
 china university of mining and technology
 U2801
 1
-Ä‘áº¡i há»?c bÃ¡ch khoa hÃ  ná»™i
+Ä‘áº¡i hï¿½?c bÃ¡ch khoa hÃ  ná»™i
 U19841
 1
 university of illinois at urbana-champaign
@@ -34417,7 +34417,7 @@ indian institute of technology roorkee
 U5388
 2
 university of illinois at urbana-champaign
-ecole nationale supã©rieure de techniques avancã©es
+ecole nationale supï¿½rieure de techniques avancï¿½es
 U6273
 1
 hebrew university

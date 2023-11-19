@@ -20874,7 +20874,7 @@ U2870
 singapore
 U5482
 1
-sã£o paulo area brazil
+sï¿½o paulo area brazil
 U7757
 1
 shanghai city china
@@ -32301,7 +32301,7 @@ U4559
 urbana-champaign illinois area
 U21793
 1
-saarbrã¼cken area germany
+saarbrï¿½cken area germany
 U23556
 1
 china
