@@ -9,6 +9,8 @@ def crop(image, imshape):
 
 def clean_dir(d):
     for f in os.listdir(d):
+        if f.endswith('.gitkeep'):
+            continue
         os.remove(os.path.join(d, f))
 
 def extract_video(vid_filepath, dest_folder, n_frames=-1, show_first_frame=False, crop_size=(1080,1080)):
