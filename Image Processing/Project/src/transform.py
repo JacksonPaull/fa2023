@@ -9,6 +9,7 @@ import torchvision.transforms as transforms
 import torchvision.models as models
 import copy
 import logging
+import time
 
 # =========================== Parameters =========================
 
@@ -24,7 +25,7 @@ device = torch.device(dev)
 torch.set_default_device(device)
 logger.log(logging.INFO, f'Torch device set to {dev}')
 
-imsize = 1080 if torch.cuda.is_available() else 128  # use small size if no GPU
+imsize = 512 if torch.cuda.is_available() else 128  # use small size if no GPU
 
 loader = transforms.Compose([
     transforms.Resize((imsize, imsize)),  # scale imported image
@@ -95,6 +96,9 @@ class Normalization(nn.Module):
         # B is batch size. C is number of channels. H is height and W is width.
         self.mean = torch.tensor(mean).view(-1, 1, 1)
         self.std = torch.tensor(std).view(-1, 1, 1)
+
+        self.mean.to('cuda:0')
+        self.std.to('cuda:0')
 
     def forward(self, img):
         # normalize ``img``
@@ -167,7 +171,7 @@ def get_style_model_and_losses(cnn, normalization_mean, normalization_std,
 
     # now we trim off the layers after the last content and style losses
     for i in range(len(model) - 1, -1, -1):
-        if isinstance(model[i], ContentLoss) or isinstance(model[i], StyleLoss):
+        if isinstance(model[i], ContentLoss) or isinstance(model[i], StyleLoss) or isinstance(model[i], TwoStyleLoss):
             break
 
     model = model[:(i + 1)]
@@ -184,7 +188,8 @@ def run_style_transfer(cnn, normalization_mean, normalization_std,
                        content_img, style_img, style_img_2=None, lamb=0.5, input_img=None, num_steps=300,
                        style_weight=1000000, content_weight=1):
     """Run the style transfer."""
-    logger.log(logging.INFO, 'Building the style transfer model..')
+    start = time.time()
+    logger.log(logging.DEBUG, 'Building the style transfer model..')
 
     if input_img is None:
         input_img = content_img.clone()
@@ -206,7 +211,7 @@ def run_style_transfer(cnn, normalization_mean, normalization_std,
 
     optimizer = get_input_optimizer(input_img)
 
-    logger.log(logging.INFO, 'Optimizing..')
+    logger.log(logging.DEBUG, 'Optimizing..')
     run = [0]
     while run[0] <= num_steps:
 
@@ -244,7 +249,8 @@ def run_style_transfer(cnn, normalization_mean, normalization_std,
     # a last correction...
     with torch.no_grad():
         input_img.clamp_(0, 1)
-
+    end = time.time()
+    logger.info(f'Finished creating image in {end - start:.2f}s ({(end-start)/60:.2f}min)')
     return input_img
 
 unloader = transforms.ToPILImage() 
