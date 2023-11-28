@@ -10,6 +10,7 @@ import torchvision.models as models
 import copy
 import logging
 import time
+from tqdm import tqdm
 
 # =========================== Parameters =========================
 
@@ -97,8 +98,9 @@ class Normalization(nn.Module):
         self.mean = torch.tensor(mean).view(-1, 1, 1)
         self.std = torch.tensor(std).view(-1, 1, 1)
 
-        self.mean.to('cuda:0')
-        self.std.to('cuda:0')
+        if torch.cuda.is_available():
+            self.mean.to('cuda:0')
+            self.std.to('cuda:0')
 
     def forward(self, img):
         # normalize ``img``
@@ -260,3 +262,43 @@ def to_PIL(tensor):
     image = image.squeeze(0)      # remove the fake batch dimension
     image = unloader(image)
     return image
+
+def reconstruct_style_img(cnn, normalization_mean, normalization_std, 
+                          style_img, num_steps=300, style_layers=None):
+    input_img = torch.rand(style_img.shape, dtype=style_img.dtype)
+
+    model, style_losses, content_losses = get_style_model_and_losses(cnn,
+        normalization_mean, normalization_std, 
+        style_img, content_img=None, lamb=None,
+        content_layers=[])  
+
+
+    input_img.requires_grad_(True)
+    model.eval()
+    model.requires_grad_(False)
+    optimizer = get_input_optimizer(input_img)
+
+    for run in tqdm(range(num_steps)):
+
+        def closure():
+            # correct the values of updated input image
+            with torch.no_grad():
+                input_img.clamp_(0, 1)
+
+            optimizer.zero_grad()
+            model(input_img)
+            loss = 0
+
+            for sl in style_losses:
+                loss += sl.loss
+
+            loss.backward()
+            return loss
+
+        optimizer.step(closure)
+
+    # a last correction...
+    with torch.no_grad():
+        input_img.clamp_(0, 1)
+
+    return input_img
